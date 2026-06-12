@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>韓国語練習</title>
+<style>
+body {
+  font-family: Arial;
+  background: #f4f4f4;
+  text-align: center;
+  padding: 20px;
+}
+
+.container {
+  background: white;
+  padding: 20px;
+  max-width: 500px;
+  margin: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.next {
+  background: #4CAF50;
+  color: white;
+}
+
+.speak {
+  background: #2196F3;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🇰🇷 韓国語練習</h2>
+
+  <p id="jp">日本語</p>
+  <h1 id="kr">한국어</h1>
+  <p id="reading">カタカナ</p>
+
+  <button class="speak" onclick="speak()">🔊 発音</button>
+  <button class="next" onclick="next()">次へ</button>
+</div>
+
+<script>
+const data = [
+  {jp:"こんにちは", kr:"안녕하세요", reading:"アンニョンハセヨ"},
+  {jp:"ありがとう", kr:"감사합니다", reading:"カムサハムニダ"},
+  {jp:"すみません", kr:"죄송합니다", reading:"チェソンハムニダ"},
+  {jp:"元気ですか？", kr:"잘 지내요?", reading:"チャル チネヨ"},
+  {jp:"はい", kr:"네", reading:"ネ"},
+  {jp:"いいえ", kr:"아니요", reading:"アニヨ"}
+];
+
+let i = 0;
+
+function show(){
+  document.getElementById("jp").innerText = data[i].jp;
+  document.getElementById("kr").innerText = data[i].kr;
+  document.getElementById("reading").innerText = data[i].reading;
+}
+
+function next(){
+  i = (i + 1) % data.length;
+  show();
+}
+
+function speak(){
+  let text = data[i].kr;
+  let uttr = new SpeechSynthesisUtterance(text);
+  uttr.lang = "ko-KR";
+  speechSynthesis.speak(uttr);
+}
+
+show();
+</script>
+
+</body>
+</html>
