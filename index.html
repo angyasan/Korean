@@ -134,7 +134,7 @@ function render() {
       <div class="ko">
         ${item.ko}
         <span class="kana">${item.kana}</span>
-        <button class="btn" onclick="speak('${item.ko}')">🔊</button>
+<button class="btn" onclick="event.stopPropagation(); speak('${item.ko}')">🔊</button>
       </div>
     `;
 
