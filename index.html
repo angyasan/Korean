@@ -1,234 +1,167 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>韓国語単語帳</title>
 
 <style>
 body {
-  font-family: sans-serif;
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
   background:#1e1e1e;
-  color:#fff;
+  color:#eee;
   padding:20px;
   max-width:600px;
   margin:auto;
 }
 
-.tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
-.tab { padding:6px 10px; background:#333; cursor:pointer; border-radius:6px; }
-.tab.active { background:#007bff; }
+h2 { text-align:center; }
 
-.item { border-bottom:1px solid #444; padding:10px 0; cursor:pointer; }
-.jp { font-size:18px; }
-
-.ko {
-  color:#00ffcc;
-  margin-top:5px;
-  display:none;
+.tab {
+  display:flex;
+  overflow-x:auto;
+  gap:6px;
+  margin-bottom:10px;
 }
 
-/* 韓国語＋カタカナ */
-.koLine {
-  display:flex;
-  gap:10px;
-  align-items:center;
+.tab button {
+  flex:1;
+  padding:8px;
+  border:none;
+  background:#333;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.tab button.active {
+  background:#007bff;
+}
+
+.word {
+  background:#2a2a2a;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.ko {
+  display:none;
+  margin-top:6px;
+  color:#fff;
+}
+
+.jp {
+  font-weight:bold;
 }
 
 .kana {
+  font-size:13px;
   color:#aaa;
-  font-size:14px;
 }
 
-button { margin:5px; padding:8px; cursor:pointer; }
-
-#quizBox {
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.9);
-  justify-content:center;
-  align-items:center;
-}
-
-#quizInner {
-  background:#fff;
-  color:#000;
-  padding:20px;
-  border-radius:10px;
-  width:90%;
+.btn {
+  margin-left:10px;
+  cursor:pointer;
+  background:none;
+  border:1px solid #555;
+  color:#fff;
+  padding:3px 6px;
+  border-radius:5px;
 }
 </style>
-
 </head>
+
 <body>
 
-<h2>韓国語単語帳</h2>
+<h2>📘 韓国語単語帳</h2>
 
-<div class="tabs" id="tabs"></div>
+<div class="tab">
+  <button class="active" onclick="setTab('common')">よく使う</button>
+  <button onclick="setTab('phrase')">フレーズ</button>
+  <button onclick="setTab('verb')">動詞</button>
+  <button onclick="setTab('noun')">名詞</button>
+  <button onclick="setTab('adj')">形容詞</button>
+  <button onclick="setTab('adv')">副詞</button>
+</div>
 
 <div id="list"></div>
 
-<button onclick="startQuiz('jpToKo')">日本語→韓国語</button>
-<button onclick="startQuiz('koToJp')">韓国語→日本語</button>
-
-<div id="quizBox">
-  <div id="quizInner">
-    <div id="question" style="font-size:22px;margin-bottom:10px;"></div>
-    <div id="answer" style="display:none;font-size:18px;color:green;"></div>
-
-    <button onclick="showAnswer()">答え</button>
-    <button onclick="next()">次へ</button>
-    <button onclick="closeQuiz()">終了</button>
-  </div>
-</div>
-
 <script>
-// ===== データ（カタカナ追加）=====
+
 const data = {
   common: [
-    { jp:"こんにちは", ko:"안녕하세요", kana:"アンニョンハセヨ" },
-    { jp:"ありがとう", ko:"감사합니다", kana:"カムサハムニダ" },
-    { jp:"ごめん", ko:"미안해", kana:"ミアネ" }
+    {jp:"こんにちは", ko:"안녕하세요", kana:"アンニョンハセヨ"},
+    {jp:"ありがとう", ko:"감사합니다", kana:"カムサハムニダ"},
+    {jp:"はい", ko:"네", kana:"ネ"},
+    {jp:"いいえ", ko:"아니요", kana:"アニヨ"},
   ],
-  phrases: [
-    { jp:"元気ですか？", ko:"잘 지내요?", kana:"チャル チネヨ" },
-    { jp:"何してる？", ko:"뭐 해?", kana:"ムォ ヘ" }
+  phrase: [
+    {jp:"元気ですか？", ko:"잘 지내요?", kana:"チャル チネヨ"},
+    {jp:"助けてください", ko:"도와주세요", kana:"トワジュセヨ"},
   ],
-  verbs: [
-    { jp:"行く", ko:"가다", kana:"カダ" },
-    { jp:"食べる", ko:"먹다", kana:"モクタ" },
-    { jp:"見る", ko:"보다", kana:"ポダ" }
+  verb: [
+    {jp:"行く", ko:"가다", kana:"カダ"},
+    {jp:"食べる", ko:"먹다", kana:"モッタ"},
+    {jp:"見る", ko:"보다", kana:"ポダ"},
   ],
-  nouns: [
-    { jp:"学校", ko:"학교", kana:"ハッキョ" },
-    { jp:"友達", ko:"친구", kana:"チング" },
-    { jp:"家", ko:"집", kana:"チプ" }
+  noun: [
+    {jp:"学校", ko:"학교", kana:"ハッキョ"},
+    {jp:"本", ko:"책", kana:"チェク"},
   ],
-  adjectives: [
-    { jp:"大きい", ko:"크다", kana:"クダ" },
-    { jp:"小さい", ko:"작다", kana:"チャクタ" }
+  adj: [
+    {jp:"大きい", ko:"크다", kana:"クダ"},
+    {jp:"小さい", ko:"작다", kana:"チャッタ"},
   ],
-  adverbs: [
-    { jp:"早く", ko:"빨리", kana:"パルリ" },
-    { jp:"ゆっくり", ko:"천천히", kana:"チョンチョニ" }
+  adv: [
+    {jp:"ゆっくり", ko:"천천히", kana:"チョンチョニ"},
+    {jp:"早く", ko:"빨리", kana:"ッパリ"},
   ]
 };
 
-let currentType = "common";
-let quizList = [];
-let index = 0;
-let mode = "";
+let current = "common";
 
-// ===== 韓国語発音（TTS）=====
-function speak(text){
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "ko-KR";
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
-}
-
-// ===== タブ =====
-const tabs = document.getElementById("tabs");
-const list = document.getElementById("list");
-
-function renderTabs(){
-  Object.keys(data).forEach(key=>{
-    const t = document.createElement("div");
-    t.className = "tab";
-    t.textContent = key;
-
-    t.onclick = ()=>{
-      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-      t.classList.add("active");
-      currentType = key;
-      renderList();
-    };
-
-    tabs.appendChild(t);
-  });
-}
-
-// ===== リスト表示 =====
-function renderList(){
+function render() {
+  const list = document.getElementById("list");
   list.innerHTML = "";
 
-  data[currentType].forEach(item=>{
+  data[current].forEach(item => {
     const div = document.createElement("div");
-    div.className="item";
+    div.className = "word";
 
     div.innerHTML = `
       <div class="jp">${item.jp}</div>
-
-      <div class="koLine">
-        <div class="ko">${item.ko}</div>
-        <div class="kana">（${item.kana}）</div>
-        <button>🔊</button>
+      <div class="ko">
+        ${item.ko}
+        <span class="kana">${item.kana}</span>
+        <button class="btn" onclick="speak('${item.ko}')">🔊</button>
       </div>
     `;
 
-    const koText = div.querySelector(".ko");
-    const btn = div.querySelector("button");
-
-    // 表示切替
-    div.onclick = (e)=>{
-      if(e.target.tagName === "BUTTON") return;
-      koText.style.display =
-        koText.style.display==="block"?"none":"block";
-    };
-
-    // 発音
-    btn.onclick = ()=>{
-      speak(item.ko);
-    };
+    div.addEventListener("click", () => {
+      const ko = div.querySelector(".ko");
+      ko.style.display = ko.style.display === "block" ? "none" : "block";
+    });
 
     list.appendChild(div);
   });
 }
 
-// ===== クイズ =====
-function startQuiz(m){
-  mode = m;
-  quizList = [...data[currentType]];
-  index = 0;
-  document.getElementById("quizBox").style.display="flex";
-  showQ();
+function setTab(tab) {
+  current = tab;
+  document.querySelectorAll(".tab button").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+  render();
 }
 
-function showQ(){
-  const q = quizList[index];
-
-  if(mode==="jpToKo"){
-    question.textContent = q.jp;
-    answer.textContent = `${q.ko}（${q.kana}）`;
-  } else {
-    question.textContent = q.ko;
-    answer.textContent = q.jp;
-  }
-
-  answer.style.display="none";
+function speak(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ko-KR";
+  speechSynthesis.speak(u);
 }
 
-function showAnswer(){
-  answer.style.display="block";
-}
+render();
 
-function next(){
-  index++;
-  if(index>=quizList.length){
-    alert("終了");
-    closeQuiz();
-    return;
-  }
-  showQ();
-}
-
-function closeQuiz(){
-  document.getElementById("quizBox").style.display="none";
-}
-
-renderTabs();
-renderList();
 </script>
 
 </body>
