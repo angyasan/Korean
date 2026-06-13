@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>韓国語単語帳</title>
+
 <style>
 body {
   font-family: sans-serif;
@@ -19,7 +20,24 @@ body {
 
 .item { border-bottom:1px solid #444; padding:10px 0; cursor:pointer; }
 .jp { font-size:18px; }
-.ko { color:#00ffcc; margin-top:5px; display:none; }
+
+.ko {
+  color:#00ffcc;
+  margin-top:5px;
+  display:none;
+}
+
+/* 韓国語＋カタカナ */
+.koLine {
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.kana {
+  color:#aaa;
+  font-size:14px;
+}
 
 button { margin:5px; padding:8px; cursor:pointer; }
 
@@ -32,6 +50,7 @@ button { margin:5px; padding:8px; cursor:pointer; }
   justify-content:center;
   align-items:center;
 }
+
 #quizInner {
   background:#fff;
   color:#000;
@@ -40,6 +59,7 @@ button { margin:5px; padding:8px; cursor:pointer; }
   width:90%;
 }
 </style>
+
 </head>
 <body>
 
@@ -64,33 +84,34 @@ button { margin:5px; padding:8px; cursor:pointer; }
 </div>
 
 <script>
+// ===== データ（カタカナ追加）=====
 const data = {
   common: [
-    { jp:"こんにちは", ko:"안녕하세요" },
-    { jp:"ありがとう", ko:"감사합니다" },
-    { jp:"ごめん", ko:"미안해" }
+    { jp:"こんにちは", ko:"안녕하세요", kana:"アンニョンハセヨ" },
+    { jp:"ありがとう", ko:"감사합니다", kana:"カムサハムニダ" },
+    { jp:"ごめん", ko:"미안해", kana:"ミアネ" }
   ],
   phrases: [
-    { jp:"元気ですか？", ko:"잘 지내요?" },
-    { jp:"何してる？", ko:"뭐 해?" }
+    { jp:"元気ですか？", ko:"잘 지내요?", kana:"チャル チネヨ" },
+    { jp:"何してる？", ko:"뭐 해?", kana:"ムォ ヘ" }
   ],
   verbs: [
-    { jp:"行く", ko:"가다" },
-    { jp:"食べる", ko:"먹다" },
-    { jp:"見る", ko:"보다" }
+    { jp:"行く", ko:"가다", kana:"カダ" },
+    { jp:"食べる", ko:"먹다", kana:"モクタ" },
+    { jp:"見る", ko:"보다", kana:"ポダ" }
   ],
   nouns: [
-    { jp:"学校", ko:"학교" },
-    { jp:"友達", ko:"친구" },
-    { jp:"家", ko:"집" }
+    { jp:"学校", ko:"학교", kana:"ハッキョ" },
+    { jp:"友達", ko:"친구", kana:"チング" },
+    { jp:"家", ko:"집", kana:"チプ" }
   ],
   adjectives: [
-    { jp:"大きい", ko:"크다" },
-    { jp:"小さい", ko:"작다" }
+    { jp:"大きい", ko:"크다", kana:"クダ" },
+    { jp:"小さい", ko:"작다", kana:"チャクタ" }
   ],
   adverbs: [
-    { jp:"早く", ko:"빨리" },
-    { jp:"ゆっくり", ko:"천천히" }
+    { jp:"早く", ko:"빨리", kana:"パルリ" },
+    { jp:"ゆっくり", ko:"천천히", kana:"チョンチョニ" }
   ]
 };
 
@@ -99,6 +120,15 @@ let quizList = [];
 let index = 0;
 let mode = "";
 
+// ===== 韓国語発音（TTS）=====
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ko-KR";
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+// ===== タブ =====
 const tabs = document.getElementById("tabs");
 const list = document.getElementById("list");
 
@@ -107,36 +137,56 @@ function renderTabs(){
     const t = document.createElement("div");
     t.className = "tab";
     t.textContent = key;
+
     t.onclick = ()=>{
       document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
       t.classList.add("active");
       currentType = key;
       renderList();
     };
+
     tabs.appendChild(t);
   });
 }
 
+// ===== リスト表示 =====
 function renderList(){
   list.innerHTML = "";
-  data[currentType].forEach((item)=>{
+
+  data[currentType].forEach(item=>{
     const div = document.createElement("div");
     div.className="item";
 
     div.innerHTML = `
       <div class="jp">${item.jp}</div>
-      <div class="ko">${item.ko}</div>
+
+      <div class="koLine">
+        <div class="ko">${item.ko}</div>
+        <div class="kana">（${item.kana}）</div>
+        <button>🔊</button>
+      </div>
     `;
 
-    div.onclick = ()=>{
-      const ko = div.querySelector(".ko");
-      ko.style.display = ko.style.display==="block"?"none":"block";
+    const koText = div.querySelector(".ko");
+    const btn = div.querySelector("button");
+
+    // 表示切替
+    div.onclick = (e)=>{
+      if(e.target.tagName === "BUTTON") return;
+      koText.style.display =
+        koText.style.display==="block"?"none":"block";
+    };
+
+    // 発音
+    btn.onclick = ()=>{
+      speak(item.ko);
     };
 
     list.appendChild(div);
   });
 }
 
+// ===== クイズ =====
 function startQuiz(m){
   mode = m;
   quizList = [...data[currentType]];
@@ -147,22 +197,20 @@ function startQuiz(m){
 
 function showQ(){
   const q = quizList[index];
-  const question = document.getElementById("question");
-  const answer = document.getElementById("answer");
-
-  answer.style.display="none";
 
   if(mode==="jpToKo"){
     question.textContent = q.jp;
-    answer.textContent = q.ko;
+    answer.textContent = `${q.ko}（${q.kana}）`;
   } else {
     question.textContent = q.ko;
     answer.textContent = q.jp;
   }
+
+  answer.style.display="none";
 }
 
 function showAnswer(){
-  document.getElementById("answer").style.display="block";
+  answer.style.display="block";
 }
 
 function next(){
